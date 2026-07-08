@@ -1,0 +1,26 @@
+# Next Level Studio — entity branding
+
+entity_id: nextlevel
+display_name: Next Level Studio
+product_name: Lead Generator
+website_url: https://nextlevelstudio.com
+contact_email: info@nextlevelstudio.com
+email_from_name: Next Level Studio
+scrape_user_agent: NextLevelLeadBot/1.0 (+https://nextlevelstudio.com)
+fit_signal_label: Next Level fit
+csv_export_prefix: nextlevel-leads
+campaign_default_name: Next Level Canvas
+
+email_outreach: |
+  I'm reaching out from Next Level Studio. We help growing businesses streamline operations with custom software, web apps, and workflow automation — practical builds, not hype.
+
+  From what we can see publicly, your team may be dealing with spreadsheet-driven processes, manual handoffs, or systems that don't talk to each other.
+
+  If that's accurate, we'd welcome a short call to see if there's a fit — no pitch deck, just an honest look at where software could save your team time.
+
+  Learn more: https://nextlevelstudio.com/custom-software/
+
+  Best,
+  Next Level Studio, LLC
+  info@nextlevelstudio.com
+  https://nextlevelstudio.com

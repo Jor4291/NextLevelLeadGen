@@ -1,0 +1,476 @@
+# Next Level Studio ICP configuration — industries, keywords, scoring weights
+
+thresholds:
+  hot: 65
+  qualified: 50
+  review: 35
+  min_persist: 25
+  evidence_floor: 40
+
+scoring_weights:
+  industry_match: 15
+  employee_sweet_spot: 20
+  process_opt_pain: 25
+  custom_software_pain: 25
+  hiring_signal: 10
+  contact_quality: 5
+  decision_maker: 5
+  named_email: 2
+  positive_keyword: 12
+  negative_keyword: 8
+
+negative_weights:
+  no_website: 8
+  no_contact: 5
+  employee_out_of_band: 10
+
+employee_bands:
+  sweet_spot_min: 15
+  sweet_spot_max: 250
+  acceptable_min: 5
+  acceptable_max: 1000
+
+disqualifier_keywords:
+  - staffing agency
+  - recruiting firm
+  - software consulting
+  - marketing agency
+  - web design agency
+  - saas platform
+  - cloud software vendor
+  - franchise opportunity
+  - equipment dealer
+  - authorized reseller
+  - distributor only
+
+industries:
+  manufacturing:
+    label: Manufacturing
+    search_queries:
+      - manufacturing company
+      - food manufacturing
+      - industrial manufacturing
+      - contract manufacturer
+    keywords:
+      - manufacturing
+      - production
+      - factory
+      - plant
+      - assembly
+      - fabrication
+      - CNC
+      - batch production
+
+  distribution:
+    label: Distribution / 3PL
+    search_queries:
+      - wholesale distributor
+      - 3PL warehouse
+      - logistics company
+      - fulfillment center
+    keywords:
+      - distribution
+      - wholesale
+      - 3PL
+      - warehouse
+      - logistics
+      - fulfillment
+      - supply chain
+
+  oil_gas:
+    label: Oil & Gas / Energy
+    search_queries:
+      - oil field services
+      - energy services company
+      - pipeline services
+      - utilities contractor
+    keywords:
+      - oil and gas
+      - oilfield
+      - pipeline
+      - energy
+      - utilities
+      - upstream
+      - midstream
+      - downstream
+
+  transport:
+    label: Transportation / Fleet
+    search_queries:
+      - trucking company
+      - fleet management
+      - freight carrier
+      - maritime services
+    keywords:
+      - trucking
+      - fleet
+      - freight
+      - carrier
+      - dispatch
+      - maritime
+      - shipping
+      - transportation
+
+  construction:
+    label: Construction / Field Services
+    search_queries:
+      - construction company
+      - field services contractor
+      - industrial contractor
+      - asset inspection
+    keywords:
+      - construction
+      - contractor
+      - field service
+      - inspection
+      - industrial services
+      - maintenance
+
+  healthcare_ops:
+    label: Healthcare Operations
+    search_queries:
+      - hospital supply chain
+      - healthcare logistics
+      - medical device distributor
+      - healthcare facilities management
+    keywords:
+      - healthcare
+      - hospital
+      - medical supply
+      - clinical operations
+      - healthcare logistics
+      - facilities management
+
+  food_beverage:
+    label: Food & Beverage Manufacturing
+    search_queries:
+      - food manufacturing company
+      - beverage production facility
+      - food processing plant
+      - commercial bakery manufacturer
+    keywords:
+      - food manufacturing
+      - food processing
+      - beverage production
+      - brewery
+      - bottling
+      - HACCP
+      - FDA registered
+      - co-packer
+      - recipe management
+      - batch record
+
+  aerospace:
+    label: Aerospace / Aviation MRO
+    search_queries:
+      - aerospace manufacturing
+      - aircraft MRO
+      - aviation maintenance company
+      - defense manufacturing contractor
+    keywords:
+      - aerospace
+      - aviation
+      - aircraft
+      - MRO
+      - airframe
+      - AS9100
+      - FAA certified
+      - hangar
+      - flight line
+      - avionics
+
+  utilities:
+    label: Utilities / Infrastructure
+    search_queries:
+      - electric utility contractor
+      - water utility operations
+      - grid operations company
+      - municipal utility services
+    keywords:
+      - utility
+      - utilities
+      - electric grid
+      - water utility
+      - power distribution
+      - linework
+      - AMI
+      - SCADA
+      - substation
+      - infrastructure operations
+
+  retail_wholesale:
+    label: Retail & Wholesale Operations
+    search_queries:
+      - wholesale distributor operations
+      - retail distribution center
+      - multi-location retail operations
+      - inventory-heavy retailer
+    keywords:
+      - retail operations
+      - wholesale operations
+      - distribution center
+      - inventory management
+      - multi-store
+      - POS integration
+      - replenishment
+      - SKU management
+      - back office operations
+
+# Entity-aligned positive signals — companies describing pain Next Level Studio solves
+positive_keywords:
+  - shop floor
+  - warehouse operations
+  - dispatch desk
+  - back office
+  - value stream mapping
+  - systems of record
+  - off-the-shelf falls short
+  - integration layer
+  - operator interface
+  - production conditions
+  - manual handoff
+  - spreadsheet-driven
+  - tribal knowledge
+  - workflow automation
+  - ERP extension
+  - WMS extension
+  - field inspection
+  - asset-heavy
+  - shop floor data
+  - operational throughput
+  - process redesign
+  - scope before build
+  - RPA
+  - LLM agent
+  - rules-based automation
+  - operator UI
+  - ETL pipeline
+  - release engineering
+  - CI/CD pipeline
+  - observability gap
+
+# Soft-fit penalties — lowers score but does not auto-disqualify
+negative_keywords:
+  - fully automated
+  - best-in-class ERP
+  - digital native
+  - cloud-first SaaS
+  - we built our own platform
+  - venture-backed startup
+  - early-stage startup
+  - pre-revenue
+  - nonprofit organization
+  - government agency
+  - university research
+  - academic institution
+  - open source only
+  - no legacy systems
+  - turn-key solution
+  - out-of-the-box ERP
+  - single vendor stack
+  - consumer app
+  - mobile game
+  - influencer marketing
+
+process_opt_keywords:
+  - manual entry
+  - spreadsheet
+  - excel-driven
+  - excel based
+  - paper-based
+  - paper based
+  - bottleneck
+  - handoff
+  - sop
+  - workflow
+  - rework
+  - throughput
+  - operational excellence
+  - process improvement
+  - lean manufacturing
+  - value stream
+  - manual process
+  - copy paste
+  - double entry
+  - OEE
+  - downtime
+  - changeover
+  - lot traceability
+  - cycle time
+  - takt time
+  - scrap rate
+  - yield loss
+  - capacity constraint
+
+custom_software_keywords:
+  - legacy erp
+  - legacy system
+  - wms
+  - mrp
+  - mes
+  - disconnected systems
+  - integration
+  - data silo
+  - custom report
+  - workaround
+  - shadow it
+  - erp migration
+  - system modernization
+  - digital transformation
+  - EDI
+  - AS400
+  - homegrown system
+  - dual entry
+  - spreadsheet workaround
+  - bolt-on system
+
+erp_systems:
+  - SAP
+  - Oracle
+  - NetSuite
+  - Epicor
+  - Infor
+  - Sage
+  - QuickBooks
+  - Microsoft Dynamics
+  - Dynamics 365
+  - Fishbowl
+  - Acumatica
+  - IQMS
+  - Plex
+
+hiring_signals:
+  - erp analyst
+  - systems integrator
+  - operations analyst
+  - automation engineer
+  - digital transformation
+  - wms administrator
+  - mes administrator
+  - business systems analyst
+  - supply chain analyst
+  - process engineer
+  - continuous improvement manager
+  - ERP project manager
+  - MES administrator
+  - manufacturing systems analyst
+  - IT project manager operations
+
+decision_maker_titles:
+  - COO
+  - Chief Operating Officer
+  - VP Operations
+  - VP of Operations
+  - Plant Manager
+  - Director of IT
+  - IT Director
+  - Supply Chain Director
+  - Director of Operations
+  - Operations Manager
+  - General Manager
+  - Director of Engineering
+  - VP Supply Chain
+  - Head of Operations
+
+# Top 50 US metros for nationwide discovery seed list
+metros:
+  - city: New York
+    state: NY
+  - city: Los Angeles
+    state: CA
+  - city: Chicago
+    state: IL
+  - city: Houston
+    state: TX
+  - city: Phoenix
+    state: AZ
+  - city: Philadelphia
+    state: PA
+  - city: San Antonio
+    state: TX
+  - city: San Diego
+    state: CA
+  - city: Dallas
+    state: TX
+  - city: Austin
+    state: TX
+  - city: Jacksonville
+    state: FL
+  - city: Fort Worth
+    state: TX
+  - city: Columbus
+    state: OH
+  - city: Charlotte
+    state: NC
+  - city: Indianapolis
+    state: IN
+  - city: San Francisco
+    state: CA
+  - city: Seattle
+    state: WA
+  - city: Denver
+    state: CO
+  - city: Nashville
+    state: TN
+  - city: Oklahoma City
+    state: OK
+  - city: El Paso
+    state: TX
+  - city: Boston
+    state: MA
+  - city: Portland
+    state: OR
+  - city: Las Vegas
+    state: NV
+  - city: Detroit
+    state: MI
+  - city: Memphis
+    state: TN
+  - city: Louisville
+    state: KY
+  - city: Baltimore
+    state: MD
+  - city: Milwaukee
+    state: WI
+  - city: Albuquerque
+    state: NM
+  - city: Tucson
+    state: AZ
+  - city: Fresno
+    state: CA
+  - city: Sacramento
+    state: CA
+  - city: Kansas City
+    state: MO
+  - city: Atlanta
+    state: GA
+  - city: Miami
+    state: FL
+  - city: Raleigh
+    state: NC
+  - city: Omaha
+    state: NE
+  - city: Minneapolis
+    state: MN
+  - city: Cleveland
+    state: OH
+  - city: Tampa
+    state: FL
+  - city: Pittsburgh
+    state: PA
+  - city: Cincinnati
+    state: OH
+  - city: St. Louis
+    state: MO
+  - city: Orlando
+    state: FL
+  - city: Salt Lake City
+    state: UT
+  - city: Birmingham
+    state: AL
+  - city: Richmond
+    state: VA
+  - city: Buffalo
+    state: NY
+  - city: Hartford
+    state: CT

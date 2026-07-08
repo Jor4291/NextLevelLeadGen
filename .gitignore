@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+
+# Data & credentials
+data/
+credentials/
+*.db
+
+# Node
+frontend/node_modules/
+frontend/dist/
+frontend/.vercel/
+
+# IDE
+.idea/
+.vscode/
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
