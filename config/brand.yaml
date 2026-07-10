@@ -3,6 +3,7 @@
 entity_id: nextlevel
 display_name: Next Level Studio
 product_name: Lead Generator
+logo_url: /nextlevel-logo.png
 website_url: https://nextlevelstudio.com
 contact_email: info@nextlevelstudio.com
 email_from_name: Next Level Studio

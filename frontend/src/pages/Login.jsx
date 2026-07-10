@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { useAuth } from "../auth";
 import { login as apiLogin, register as apiRegister } from "../api";
+import BrandLogo from "../components/BrandLogo";
 
 export default function Login() {
   const { login, authRequired, brand } = useAuth();
-  const displayName = brand?.display_name || "Lead Generator";
   const productName = brand?.product_name || "Lead Generator";
   const [mode, setMode] = useState("login");
   const [email, setEmail] = useState("");
@@ -33,7 +33,7 @@ export default function Login() {
   return (
     <div className="login-page">
       <div className="login-card card">
-        <div className="brand">{displayName}</div>
+        <BrandLogo variant="login" />
         <h1>{productName}</h1>
         <p className="login-subtitle">
           {authRequired

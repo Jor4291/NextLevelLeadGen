@@ -1,6 +1,7 @@
 import { NavLink, Route, Routes } from "react-router-dom";
 import { getEntityId } from "./api";
 import { useAuth } from "./auth";
+import BrandLogo from "./components/BrandLogo";
 import Dashboard from "./pages/Dashboard";
 import ScrapeJobs from "./pages/ScrapeJobs";
 import LeadInbox from "./pages/LeadInbox";
@@ -11,13 +12,12 @@ import Login from "./pages/Login";
 
 function AppLayout() {
   const { user, brand, logout } = useAuth();
-  const displayName = brand?.display_name || "Lead Generator";
   const productName = brand?.product_name || "Lead Generator";
 
   return (
     <div className="app-shell">
       <aside className="sidebar">
-        <div className="brand">{displayName}</div>
+        <BrandLogo variant="sidebar" />
         <div className="brand-title">{productName}</div>
         <nav>
           <NavLink to="/" end className="nav-link">

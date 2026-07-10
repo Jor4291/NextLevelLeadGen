@@ -52,9 +52,26 @@ a {
 }
 
 .brand-title {
-  font-size: 1.1rem;
-  font-weight: 600;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--muted);
   margin-bottom: 2rem;
+}
+
+.brand-logo {
+  display: block;
+  width: auto;
+  height: auto;
+}
+
+.brand-logo--sidebar {
+  max-width: 200px;
+  margin-bottom: 0.5rem;
+}
+
+.brand-logo--login {
+  max-width: 240px;
+  margin: 0 auto 0.75rem;
 }
 
 .nav-link {
