@@ -1,0 +1,9 @@
+industries:
+  port_agency:
+    label: Port Agency
+    search_queries:
+    - Port Agency company
+    - Port Agency
+    keywords:
+    - port
+    - agency

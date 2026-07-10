@@ -1,13 +1,20 @@
-import { useEffect, useState } from "react";
-import { apiGet, apiPost } from "../api";
+import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
+import { addIndustry, apiGet, apiPost } from "../api";
 import ScrapeJobProgress from "../components/ScrapeJobProgress";
 import { parseScrapeProgress } from "../utils/scrapeProgress";
+import {
+  describeIndustrySearch,
+  resolveIndustryFromInput,
+} from "../utils/industry";
 
 export default function ScrapeJobs() {
   const [config, setConfig] = useState(null);
   const [jobs, setJobs] = useState([]);
+  const [industryInput, setIndustryInput] = useState("");
+  const [industryMsg, setIndustryMsg] = useState("");
+  const [savingIndustry, setSavingIndustry] = useState(false);
   const [form, setForm] = useState({
-    industry: "manufacturing",
     city: "",
     state: "",
     keyword_override: "",
@@ -40,6 +47,44 @@ export default function ScrapeJobs() {
     load();
   }, []);
 
+  const resolvedIndustry = useMemo(
+    () => resolveIndustryFromInput(industryInput, config?.industries || []),
+    [industryInput, config]
+  );
+
+  const handleIndustryChange = (value) => {
+    setIndustryInput(value);
+    setIndustryMsg("");
+  };
+
+  const handleSaveIndustry = async () => {
+    const label = industryInput.trim();
+    if (!label) {
+      setError("Enter an industry name before saving.");
+      return;
+    }
+
+    setSavingIndustry(true);
+    setError("");
+    setIndustryMsg("");
+    try {
+      const result = await addIndustry(label);
+      const updated = await apiGet("/config");
+      setConfig(updated);
+      setIndustryInput(result.label);
+      setIndustryMsg(`Saved "${result.label}" to your industry list.`);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSavingIndustry(false);
+    }
+  };
+
+  const isKnownIndustry = Boolean(resolvedIndustry.matched);
+  const searchPreview = form.keyword_override
+    ? form.keyword_override
+    : describeIndustrySearch(resolvedIndustry, config?.industries || []);
+
   useEffect(() => {
     const interval = setInterval(loadJobs, hasActiveJobs ? 2000 : 15000);
     return () => clearInterval(interval);
@@ -49,9 +94,17 @@ export default function ScrapeJobs() {
     e.preventDefault();
     setLoading(true);
     setError("");
+    setIndustryMsg("");
+    const resolved = resolveIndustryFromInput(industryInput, config?.industries || []);
+    if (!resolved.id) {
+      setError("Enter an industry before starting a scrape.");
+      setLoading(false);
+      return;
+    }
     try {
       await apiPost("/scrape-jobs", {
-        industry: form.industry,
+        industry: resolved.id,
+        industry_label: resolved.label,
         city: form.city || null,
         state: form.state || null,
         keyword_override: form.keyword_override || null,
@@ -121,6 +174,7 @@ export default function ScrapeJobs() {
       </div>
 
       {error && <div className="alert alert-error">{error}</div>}
+      {industryMsg && <div className="alert alert-info">{industryMsg}</div>}
 
       {activeJobs.length > 0 && (
         <div className="card active-jobs-panel">
@@ -157,16 +211,42 @@ export default function ScrapeJobs() {
           <div className="form-row">
             <div>
               <label>Industry</label>
-              <select
-                value={form.industry}
-                onChange={(e) => setForm({ ...form, industry: e.target.value })}
-              >
-                {config?.industries?.map((i) => (
-                  <option key={i.id} value={i.id}>
-                    {i.label}
-                  </option>
-                ))}
-              </select>
+              <div className="industry-input-row">
+                <input
+                  list="industry-options"
+                  value={industryInput}
+                  onChange={(e) => handleIndustryChange(e.target.value)}
+                  placeholder="Port agency, veterinary clinics, distribution..."
+                  required
+                />
+                <datalist id="industry-options">
+                  {config?.industries?.map((i) => (
+                    <option key={i.id} value={i.label} />
+                  ))}
+                </datalist>
+                <button
+                  type="button"
+                  className="btn btn-secondary btn-icon"
+                  onClick={handleSaveIndustry}
+                  disabled={savingIndustry || !industryInput.trim()}
+                  title="Save to industry list for reuse"
+                >
+                  {savingIndustry ? "…" : "+"}
+                </button>
+              </div>
+              <p className="field-hint">
+                Type any industry or pick from the list. Press <strong>+</strong> to
+                save a custom industry with search queries and scoring keywords.
+                {!isKnownIndustry && industryInput.trim() && (
+                  <> One-off scrape — not saved yet.</>
+                )}
+                {resolvedIndustry.id && searchPreview && (
+                  <>
+                    {" "}
+                    Will search: <strong>{searchPreview}</strong>
+                  </>
+                )}
+              </p>
             </div>
             <div>
               <label>City (optional)</label>
@@ -265,7 +345,7 @@ export default function ScrapeJobs() {
               </div>
             </div>
           </div>
-          <button className="btn" type="submit" disabled={loading || hasActiveJobs}>
+          <button className="btn" type="submit" disabled={loading || hasActiveJobs || !resolvedIndustry.id}>
             {loading
               ? "Starting..."
               : hasActiveJobs
@@ -312,6 +392,7 @@ export default function ScrapeJobs() {
                   <th>Status</th>
                   <th>Progress</th>
                   <th>Leads</th>
+                  <th></th>
                 </tr>
               </thead>
               <tbody>
@@ -320,7 +401,7 @@ export default function ScrapeJobs() {
                   return (
                     <tr key={j.id}>
                       <td>{j.id}</td>
-                      <td>{j.industry}</td>
+                      <td>{j.industry_label || j.industry?.replace(/_/g, " ")}</td>
                       <td>
                         <span className={`mode-badge mode-${j.enrichment_mode || "fast"}`}>
                           {j.enrichment_mode === "quality" ? "Quality" : "Fast"}
@@ -347,7 +428,17 @@ export default function ScrapeJobs() {
                           {p.detail}
                         </div>
                       </td>
-                      <td>{j.companies_found}</td>
+                      <td>{j.lead_count ?? j.companies_found}</td>
+                      <td>
+                        {(j.lead_count ?? j.companies_found) > 0 && (
+                          <Link
+                            to={`/leads?scrape_job_id=${j.id}`}
+                            className="btn btn-secondary btn-sm"
+                          >
+                            View in inbox
+                          </Link>
+                        )}
+                      </td>
                     </tr>
                   );
                 })}

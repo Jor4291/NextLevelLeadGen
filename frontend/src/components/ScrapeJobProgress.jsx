@@ -15,7 +15,8 @@ export default function ScrapeJobProgress({
   cancelling = false,
 }) {
   const progress = parseScrapeProgress(job);
-  const industryLabel = job.industry?.replace(/_/g, " ") || "—";
+  const industryLabel =
+    job.industry_label || job.industry?.replace(/_/g, " ") || "—";
   const modeLabel =
     job.enrichment_mode === "quality" ? "Quality mode" : "Fast mode";
   const canCancel =

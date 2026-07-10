@@ -66,6 +66,10 @@ export async function register(email, password, name) {
   return apiPost("/auth/register", { email, password, name });
 }
 
+export async function addIndustry(label) {
+  return apiPost("/industries", { label });
+}
+
 export function logout() {
   localStorage.removeItem(tokenKey());
   localStorage.removeItem(userKey());

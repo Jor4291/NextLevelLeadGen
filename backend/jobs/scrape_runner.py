@@ -147,6 +147,7 @@ async def run_scrape_job(job_id: int, db_factory) -> None:
             city=job.city,
             state=job.state,
             keyword_override=job.keyword_override,
+            industry_label=job.industry_label,
             max_results=settings.max_companies_per_job,
             progress_callback=update_progress,
             should_cancel=lambda: is_job_cancelled(job_id, db_factory),

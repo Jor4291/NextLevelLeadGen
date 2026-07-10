@@ -147,6 +147,79 @@ a {
   margin-bottom: 1rem;
 }
 
+.industry-input-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: stretch;
+}
+
+.industry-input-row input {
+  flex: 1;
+  min-width: 0;
+}
+
+.scoring-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.scoring-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.scoring-section {
+  margin-top: 1.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--border);
+}
+
+.scoring-section h4 {
+  margin: 0 0 1rem;
+  font-size: 0.95rem;
+}
+
+.scoring-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1rem;
+}
+
+.scoring-field input {
+  margin-bottom: 0.25rem;
+}
+
+.scoring-default {
+  font-size: 0.75rem;
+  opacity: 0.85;
+}
+
+.override-badge {
+  display: inline-block;
+  margin-left: 0.4rem;
+  padding: 0.05rem 0.35rem;
+  border-radius: 999px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  background: rgba(96, 165, 250, 0.18);
+  color: #93c5fd;
+  vertical-align: middle;
+}
+
+.btn-icon {
+  min-width: 2.5rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 1.25rem;
+  line-height: 1;
+  font-weight: 600;
+}
+
 label {
   display: block;
   font-size: 0.85rem;

@@ -19,7 +19,19 @@ from backend.auth import (
     require_admin,
     verify_password,
 )
-from backend.config_loader import get_industry_options, get_metro_options, get_brand_config, load_icp_config
+from backend.config_loader import (
+    add_custom_industry,
+    get_industry_options,
+    get_metro_options,
+    get_brand_config,
+    load_icp_config,
+    slugify_industry_id,
+)
+from backend.icp_scoring_config import (
+    get_scoring_settings,
+    reset_scoring_overrides,
+    update_scoring_settings,
+)
 from backend.database import SessionLocal, get_db, init_db
 from backend.integrations.email_campaign import (
     get_default_templates,
@@ -34,6 +46,7 @@ from backend.jobs.scrape_runner import (
     request_job_cancel,
     schedule_scrape_job,
 )
+from backend.lead_filters import lead_counts_by_job, resolve_latest_scrape_job_id
 from backend.models import (
     EmailCampaign,
     EmailCampaignStatus,
@@ -69,12 +82,17 @@ app.add_middleware(
 
 class ScrapeJobCreate(BaseModel):
     industry: str
+    industry_label: Optional[str] = None
     city: Optional[str] = None
     state: Optional[str] = None
     keyword_override: Optional[str] = None
     enrichment_mode: str = "fast"
     positive_keywords_override: Optional[str] = None
     negative_keywords_override: Optional[str] = None
+
+
+class IndustryCreate(BaseModel):
+    label: str = Field(min_length=1, max_length=128)
 
 
 class LeadUpdate(BaseModel):
@@ -112,6 +130,13 @@ class SendEmailRequest(BaseModel):
 
 class SettingsUpdate(BaseModel):
     google_sheet_id: Optional[str] = None
+
+
+class ScoringSettingsUpdate(BaseModel):
+    scoring_weights: Optional[dict[str, float | int]] = None
+    negative_weights: Optional[dict[str, float | int]] = None
+    thresholds: Optional[dict[str, float | int]] = None
+    employee_bands: Optional[dict[str, float | int]] = None
 
 
 class LoginRequest(BaseModel):
@@ -193,11 +218,16 @@ def lead_to_dict(lead: Lead, user_names: dict[int, str] | None = None) -> dict:
     }
 
 
-def job_to_dict(job: ScrapeJob, user_names: dict[int, str] | None = None) -> dict:
+def job_to_dict(
+    job: ScrapeJob,
+    user_names: dict[int, str] | None = None,
+    lead_count: int | None = None,
+) -> dict:
     creator_id = job.created_by_user_id
-    return {
+    payload = {
         "id": job.id,
         "industry": job.industry,
+        "industry_label": getattr(job, "industry_label", None),
         "city": job.city,
         "state": job.state,
         "keyword_override": job.keyword_override,
@@ -219,6 +249,9 @@ def job_to_dict(job: ScrapeJob, user_names: dict[int, str] | None = None) -> dic
         "created_by_user_id": creator_id,
         "created_by_name": user_names.get(creator_id) if creator_id and user_names else None,
     }
+    if lead_count is not None:
+        payload["lead_count"] = lead_count
+    return payload
 
 
 @app.on_event("startup")
@@ -340,6 +373,41 @@ def update_settings(
     }
 
 
+@app.get("/api/icp/scoring")
+def get_icp_scoring_settings(user: User = Depends(get_current_user)):
+    return get_scoring_settings()
+
+
+@app.post("/api/icp/scoring")
+def save_icp_scoring_settings(
+    payload: ScoringSettingsUpdate,
+    user: User = Depends(get_current_user),
+):
+    updates = payload.model_dump(exclude_none=True)
+    if not updates:
+        raise HTTPException(status_code=400, detail="No scoring fields to update")
+    try:
+        return update_scoring_settings(updates)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@app.post("/api/icp/scoring/reset")
+def reset_icp_scoring_settings(user: User = Depends(get_current_user)):
+    return reset_scoring_overrides()
+
+
+@app.post("/api/industries")
+def create_industry(
+    payload: IndustryCreate,
+    user: User = Depends(get_current_user),
+):
+    try:
+        return add_custom_industry(payload.label)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
 @app.post("/api/scrape-jobs")
 def create_scrape_job(
     payload: ScrapeJobCreate,
@@ -347,9 +415,14 @@ def create_scrape_job(
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
-    industries = {i["id"] for i in get_industry_options()}
-    if payload.industry not in industries:
-        raise HTTPException(status_code=400, detail="Invalid industry")
+    industry_id = slugify_industry_id(payload.industry)
+    if not industry_id:
+        raise HTTPException(status_code=400, detail="Industry is required")
+
+    industry_label = (payload.industry_label or payload.industry).strip() or None
+    industry_cfg = load_icp_config().get("industries", {}).get(industry_id, {})
+    if not industry_label and industry_cfg.get("label"):
+        industry_label = industry_cfg["label"]
 
     if payload.enrichment_mode not in ("fast", "quality"):
         raise HTTPException(status_code=400, detail="enrichment_mode must be 'fast' or 'quality'")
@@ -369,7 +442,8 @@ def create_scrape_job(
         )
 
     job = ScrapeJob(
-        industry=payload.industry,
+        industry=industry_id,
+        industry_label=industry_label,
         city=payload.city,
         state=payload.state,
         keyword_override=payload.keyword_override,
@@ -397,7 +471,8 @@ def list_scrape_jobs(
     jobs = db.query(ScrapeJob).order_by(ScrapeJob.created_at.desc()).all()
     creator_ids = {j.created_by_user_id for j in jobs if j.created_by_user_id}
     names = _user_name_map(db, creator_ids)
-    return [job_to_dict(j, names) for j in jobs]
+    counts = lead_counts_by_job(db, [j.id for j in jobs])
+    return [job_to_dict(j, names, lead_count=counts.get(j.id, 0)) for j in jobs]
 
 
 @app.get("/api/scrape-jobs/{job_id}")
@@ -454,9 +529,21 @@ def list_leads(
     not_exported: Optional[bool] = Query(None),
     assigned_to_me: Optional[bool] = Query(None),
     assigned_to_user_id: Optional[int] = Query(None),
+    scrape_job_id: Optional[int] = Query(None),
+    latest_scrape: Optional[bool] = Query(None),
     include_disqualified: Optional[bool] = Query(False),
 ):
-    q = db.query(Lead).order_by(Lead.fit_score.desc(), Lead.scraped_at.desc())
+    job_filter_id = scrape_job_id
+    if latest_scrape:
+        job_filter_id = resolve_latest_scrape_job_id(db)
+        if job_filter_id is None:
+            return []
+
+    if job_filter_id is not None:
+        q = db.query(Lead).filter(Lead.scrape_job_id == job_filter_id)
+        q = q.order_by(Lead.scraped_at.desc(), Lead.fit_score.desc())
+    else:
+        q = db.query(Lead).order_by(Lead.fit_score.desc(), Lead.scraped_at.desc())
     thresholds = load_icp_config().get("thresholds", {})
     hot_threshold = thresholds.get("hot", 65)
 

@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import { apiGet, apiPost } from "../api";
+import { formatRelativeTime, formatScrapeJobLabel } from "../utils/scrapeJob";
 
 function scoreClass(score, thresholds) {
   const hot = thresholds?.hot ?? 65;
@@ -31,22 +32,46 @@ const EMPTY_FILTERS = {
   hot_only: false,
   assigned_to_me: false,
   assigned_to_user_id: "",
+  scrape_job_id: "",
+  latest_scrape: false,
 };
 
 export default function LeadInbox() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialJobId = searchParams.get("scrape_job_id") || "";
   const [leads, setLeads] = useState([]);
+  const [scrapeJobs, setScrapeJobs] = useState([]);
   const [config, setConfig] = useState(null);
   const [selected, setSelected] = useState(new Set());
-  const [showAll, setShowAll] = useState(false);
+  const [showAll, setShowAll] = useState(Boolean(initialJobId));
   const [filters, setFilters] = useState({
     ...EMPTY_FILTERS,
-    min_score: "50",
+    min_score: initialJobId ? "" : "50",
+    scrape_job_id: initialJobId,
   });
   const [error, setError] = useState("");
   const [exportMsg, setExportMsg] = useState("");
   const [users, setUsers] = useState([]);
 
   const thresholds = config?.icp?.thresholds;
+  const scrapeFilterActive = Boolean(filters.scrape_job_id || filters.latest_scrape);
+
+  const activeScrapeJob = useMemo(() => {
+    if (filters.latest_scrape) {
+      return scrapeJobs.find((j) => j.status === "completed") || scrapeJobs[0] || null;
+    }
+    if (filters.scrape_job_id) {
+      return scrapeJobs.find((j) => String(j.id) === String(filters.scrape_job_id)) || null;
+    }
+    return null;
+  }, [filters.latest_scrape, filters.scrape_job_id, scrapeJobs]);
+
+  const syncScrapeJobParam = (jobId) => {
+    const next = new URLSearchParams(searchParams);
+    if (jobId) next.set("scrape_job_id", jobId);
+    else next.delete("scrape_job_id");
+    setSearchParams(next, { replace: true });
+  };
 
   const buildQuery = () => {
     const params = new URLSearchParams();
@@ -64,16 +89,24 @@ export default function LeadInbox() {
     if (filters.assigned_to_me) params.set("assigned_to_me", "true");
     if (filters.assigned_to_user_id)
       params.set("assigned_to_user_id", filters.assigned_to_user_id);
+    if (filters.latest_scrape) params.set("latest_scrape", "true");
+    else if (filters.scrape_job_id) params.set("scrape_job_id", filters.scrape_job_id);
     const qs = params.toString();
     return `/leads${qs ? `?${qs}` : ""}`;
   };
 
   const load = () => {
-    Promise.all([apiGet(buildQuery()), apiGet("/config"), apiGet("/users")])
-      .then(([l, c, u]) => {
+    Promise.all([
+      apiGet(buildQuery()),
+      apiGet("/config"),
+      apiGet("/users"),
+      apiGet("/scrape-jobs"),
+    ])
+      .then(([l, c, u, jobs]) => {
         setLeads(l);
         setConfig(c);
         setUsers(u);
+        setScrapeJobs(jobs);
       })
       .catch((e) => setError(e.message));
   };
@@ -91,6 +124,7 @@ export default function LeadInbox() {
         hot_only: true,
         has_contact: true,
       });
+      syncScrapeJobParam("");
       return;
     }
     if (preset === "ready") {
@@ -102,6 +136,7 @@ export default function LeadInbox() {
         not_exported: true,
         status: "new",
       });
+      syncScrapeJobParam("");
       return;
     }
     if (preset === "mine") {
@@ -110,6 +145,7 @@ export default function LeadInbox() {
         ...EMPTY_FILTERS,
         assigned_to_me: true,
       });
+      syncScrapeJobParam("");
       return;
     }
     if (preset === "qualified") {
@@ -118,6 +154,7 @@ export default function LeadInbox() {
         ...EMPTY_FILTERS,
         min_score: String(thresholds?.qualified ?? 50),
       });
+      syncScrapeJobParam("");
       return;
     }
     if (preset === "portal") {
@@ -127,12 +164,34 @@ export default function LeadInbox() {
         has_portal: true,
         min_score: String(thresholds?.review ?? 35),
       });
+      syncScrapeJobParam("");
+      return;
+    }
+    if (preset === "latest") {
+      setShowAll(true);
+      setFilters({
+        ...EMPTY_FILTERS,
+        latest_scrape: true,
+      });
+      syncScrapeJobParam("");
       return;
     }
     if (preset === "all") {
       setShowAll(true);
       setFilters({ ...EMPTY_FILTERS });
+      syncScrapeJobParam("");
     }
+  };
+
+  const handleScrapeJobChange = (value) => {
+    setShowAll(true);
+    setFilters({
+      ...filters,
+      scrape_job_id: value,
+      latest_scrape: false,
+      min_score: value ? "" : filters.min_score || "50",
+    });
+    syncScrapeJobParam(value);
   };
 
   const toggleSelect = (id) => {
@@ -186,6 +245,9 @@ export default function LeadInbox() {
       {exportMsg && <div className="alert alert-info">{exportMsg}</div>}
 
       <div className="preset-buttons">
+        <button type="button" className="btn btn-sm" onClick={() => applyPreset("latest")}>
+          Latest scrape
+        </button>
         <button type="button" className="btn btn-sm" onClick={() => applyPreset("hot")}>
           Hot leads
         </button>
@@ -211,6 +273,37 @@ export default function LeadInbox() {
       </div>
 
       <div className="filters">
+        <div>
+          <label>Scrape job</label>
+          <select
+            value={filters.latest_scrape ? "__latest__" : filters.scrape_job_id}
+            onChange={(e) => {
+              const value = e.target.value;
+              if (value === "") {
+                setShowAll(false);
+                setFilters({
+                  ...EMPTY_FILTERS,
+                  min_score: "50",
+                });
+                syncScrapeJobParam("");
+                return;
+              }
+              if (value === "__latest__") {
+                applyPreset("latest");
+                return;
+              }
+              handleScrapeJobChange(value);
+            }}
+          >
+            <option value="">All scrapes</option>
+            <option value="__latest__">Latest completed scrape</option>
+            {scrapeJobs.map((job) => (
+              <option key={job.id} value={String(job.id)}>
+                {formatScrapeJobLabel(job, config?.industries || [])}
+              </option>
+            ))}
+          </select>
+        </div>
         <div>
           <label>Min Score</label>
           <input
@@ -349,9 +442,20 @@ export default function LeadInbox() {
         </button>
       </div>
 
-      {!showAll && filters.min_score === "50" && !filters.hot_only && (
+      {scrapeFilterActive && activeScrapeJob && (
         <p className="filter-hint">
-          Showing qualified leads (score 50+). Click <strong>Show all</strong> to see every lead.
+          Showing leads from scrape{" "}
+          <strong>
+            {formatScrapeJobLabel(activeScrapeJob, config?.industries || [])}
+          </strong>
+          . Sorted by most recently scraped.
+        </p>
+      )}
+
+      {!scrapeFilterActive && !showAll && filters.min_score === "50" && !filters.hot_only && (
+        <p className="filter-hint">
+          Showing qualified leads (score 50+). Click <strong>Latest scrape</strong> or{" "}
+          <strong>Show all</strong> to widen the list.
         </p>
       )}
 
@@ -375,6 +479,7 @@ export default function LeadInbox() {
                 <th>Practice</th>
                 <th>Top signal</th>
                 <th>Contact</th>
+                {scrapeFilterActive && <th>Scraped</th>}
                 <th>Assigned</th>
                 <th>Status</th>
               </tr>
@@ -418,6 +523,11 @@ export default function LeadInbox() {
                       {l.email || l.phone || "—"}
                     </div>
                   </td>
+                  {scrapeFilterActive && (
+                    <td style={{ whiteSpace: "nowrap", fontSize: "0.85rem" }}>
+                      {formatRelativeTime(l.scraped_at) || "—"}
+                    </td>
+                  )}
                   <td>{l.assigned_to_name || "—"}</td>
                   <td>
                     <span className="status-pill">{l.status}</span>

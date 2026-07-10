@@ -10,7 +10,7 @@ from urllib.parse import quote_plus, unquote, urlparse
 import httpx
 from bs4 import BeautifulSoup
 
-from backend.config_loader import load_icp_config
+from backend.config_loader import get_discovery_queries, load_icp_config
 from backend.settings import settings
 
 logger = logging.getLogger(__name__)
@@ -94,6 +94,7 @@ class MapsDiscoveryScraper:
         city: str | None = None,
         state: str | None = None,
         keyword_override: str | None = None,
+        industry_label: str | None = None,
         max_results: int = 50,
         progress_callback=None,
         should_cancel: Callable[[], bool] | None = None,
@@ -107,7 +108,7 @@ class MapsDiscoveryScraper:
             ) from exc
 
         industry_cfg = self.config.get("industries", {}).get(industry, {})
-        queries = industry_cfg.get("search_queries", [industry])[:2]
+        queries = get_discovery_queries(industry, industry_label or industry_cfg.get("label"))
         if keyword_override:
             queries = [keyword_override]
 
@@ -415,6 +416,7 @@ async def discover_companies(
     city: str | None = None,
     state: str | None = None,
     keyword_override: str | None = None,
+    industry_label: str | None = None,
     max_results: int = 50,
     progress_callback=None,
     should_cancel: Callable[[], bool] | None = None,
@@ -426,6 +428,7 @@ async def discover_companies(
         city=city,
         state=state,
         keyword_override=keyword_override,
+        industry_label=industry_label,
         max_results=max_results,
         progress_callback=progress_callback,
         should_cancel=should_cancel,

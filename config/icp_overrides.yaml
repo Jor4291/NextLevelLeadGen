@@ -1,0 +1,7 @@
+# User-tuned scoring overrides (saved from Settings).
+# Merged over config/icp.yaml at runtime. Delete a key or reset to restore defaults.
+
+scoring_weights: {}
+negative_weights: {}
+thresholds: {}
+employee_bands: {}

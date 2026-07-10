@@ -64,6 +64,7 @@ class ScrapeJob(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     industry: Mapped[str] = mapped_column(String(64), nullable=False)
+    industry_label: Mapped[str | None] = mapped_column(String(128))
     city: Mapped[str | None] = mapped_column(String(128))
     state: Mapped[str | None] = mapped_column(String(8))
     keyword_override: Mapped[str | None] = mapped_column(String(256))

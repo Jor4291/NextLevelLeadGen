@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { apiGet, apiPost } from "../api";
+import ScoringTuner from "../components/ScoringTuner";
 
 export default function Settings() {
   const [config, setConfig] = useState(null);
@@ -31,11 +32,13 @@ export default function Settings() {
     <>
       <div className="page-header">
         <h1>Settings</h1>
-        <p>Google Sheets export and integration configuration.</p>
+        <p>Google Sheets export, ICP scoring weights, and integration configuration.</p>
       </div>
 
       {error && <div className="alert alert-error">{error}</div>}
       {message && <div className="alert alert-info">{message}</div>}
+
+      <ScoringTuner />
 
       <div className="card">
         <h3 style={{ marginTop: 0 }}>Google Sheets</h3>
@@ -79,20 +82,12 @@ export default function Settings() {
       </div>
 
       <div className="card">
-        <h3 style={{ marginTop: 0 }}>Scoring Weights</h3>
-        <pre
-          style={{
-            background: "var(--bg)",
-            padding: "1rem",
-            borderRadius: "8px",
-            overflow: "auto",
-            fontSize: "0.8rem",
-          }}
-        >
-          {JSON.stringify(config?.icp?.scoring_weights, null, 2)}
-        </pre>
-        <p style={{ fontSize: "0.85rem", color: "var(--muted)" }}>
-          Edit <code>config/icp.yaml</code> to tune industries, keywords, and weights.
+        <h3 style={{ marginTop: 0 }}>Advanced config files</h3>
+        <p style={{ fontSize: "0.85rem", color: "var(--muted)", marginBottom: 0 }}>
+          Default industries, keywords, and base scoring live in{" "}
+          <code>config/icp.yaml</code>. UI overrides are stored in{" "}
+          <code>config/icp_overrides.yaml</code>. Custom industries from Run Scrape
+          are saved to <code>config/custom_industries.yaml</code>.
         </p>
       </div>
     </>

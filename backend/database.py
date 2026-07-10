@@ -41,6 +41,7 @@ def _migrate_schema() -> None:
             ("positive_keywords_override", "TEXT"),
             ("negative_keywords_override", "TEXT"),
             ("created_by_user_id", "INTEGER"),
+            ("industry_label", "VARCHAR(128)"),
         ]
         for col_name, col_def in migrations:
             if col_name not in columns:
