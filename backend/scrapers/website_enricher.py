@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 import re
 from dataclasses import dataclass, field
 from urllib.parse import urljoin, urlparse
@@ -9,8 +10,10 @@ import httpx
 from bs4 import BeautifulSoup
 
 from backend.config_loader import load_icp_config
+from backend.scrapers.portal_detector import detect_portals
 from backend.settings import settings
 
+logger = logging.getLogger(__name__)
 
 EMAIL_RE = re.compile(
     r"[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}", re.IGNORECASE
@@ -55,6 +58,10 @@ class EnrichmentResult:
     pages_scraped: list[str] = field(default_factory=list)
     matched_keywords: list[dict] = field(default_factory=list)
     evidence: list[dict] = field(default_factory=list)
+    portal_detected: bool = False
+    portal_type: str | None = None
+    portal_urls: list[str] = field(default_factory=list)
+    platform_signals: list[dict] = field(default_factory=list)
 
 
 class WebsiteEnricher:
@@ -70,6 +77,17 @@ class WebsiteEnricher:
         "careers",
         "jobs",
         "news",
+        "login",
+        "signin",
+        "sign-in",
+        "portal",
+        "employee",
+        "intranet",
+        "dealer",
+        "partner",
+        "vendor",
+        "client-area",
+        "my-account",
     ]
 
     def __init__(self) -> None:
@@ -108,6 +126,7 @@ class WebsiteEnricher:
 
         domain = urlparse(base_url).netloc.lower().removeprefix("www.")
         combined_text_parts: list[str] = []
+        pages_html: dict[str, str] = {}
 
         async with httpx.AsyncClient(
             headers=self.headers, follow_redirects=True, timeout=20.0
@@ -119,6 +138,7 @@ class WebsiteEnricher:
                     continue
 
                 result.pages_scraped.append(url)
+                pages_html[url] = html
                 soup = BeautifulSoup(html, "lxml")
                 text = soup.get_text(" ", strip=True)
                 combined_text_parts.append(text)
@@ -163,18 +183,27 @@ class WebsiteEnricher:
                     }
                 )
 
+        portal = await detect_portals(base_url, pages_html)
+        result.portal_detected = portal.portal_detected
+        result.portal_type = portal.portal_type
+        result.portal_urls = portal.portal_urls
+        result.platform_signals = portal.platform_signals
+        result.evidence.extend(portal.evidence)
+
         return result
 
     async def _fetch_page(self, client: httpx.AsyncClient, url: str) -> str | None:
         try:
             resp = await client.get(url)
             if resp.status_code >= 400:
+                logger.debug("Skipping %s — HTTP %s", url, resp.status_code)
                 return None
             content_type = resp.headers.get("content-type", "")
             if "text/html" not in content_type and "application/xhtml" not in content_type:
                 return None
             return resp.text
-        except httpx.HTTPError:
+        except httpx.HTTPError as exc:
+            logger.warning("Failed to fetch %s: %s", url, exc)
             return None
 
     def _normalize_url(self, website: str) -> str | None:
@@ -301,16 +330,6 @@ class WebsiteEnricher:
         return matches
 
     def _rank_emails(self, emails: list[str], domain: str) -> list[str]:
-        priority_prefixes = [
-            "engage",
-            "contact",
-            "info",
-            "hello",
-            "sales",
-            "ops",
-            "operations",
-        ]
-
         def score(email: str) -> tuple[int, str]:
             prefix = email.split("@")[0]
             if prefix in ("contact", "info", "hello", "engage", "ops", "operations"):

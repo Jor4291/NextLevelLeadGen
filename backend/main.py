@@ -51,7 +51,7 @@ from backend.settings import ROOT_DIR, settings
 logger = logging.getLogger(__name__)
 
 app = FastAPI(
-    title=f"{get_brand_config().get('display_name', 'Caelvon')} Lead Generator",
+    title=f"{get_brand_config().get('display_name', 'Next Level Studio')} Lead Generator",
     version="1.0.0",
 )
 
@@ -167,6 +167,11 @@ def lead_to_dict(lead: Lead, user_names: dict[int, str] | None = None) -> dict:
         "contact_title": lead.contact_title,
         "city": lead.city,
         "state": lead.state,
+        "address": lead.address,
+        "portal_detected": lead.portal_detected,
+        "portal_type": lead.portal_type,
+        "portal_urls": lead.portal_urls or [],
+        "platform_signals": lead.platform_signals or [],
         "employee_estimate": lead.employee_estimate,
         "fit_score": lead.fit_score,
         "lead_tier": tier,
@@ -218,6 +223,10 @@ def job_to_dict(job: ScrapeJob, user_names: dict[int, str] | None = None) -> dic
 
 @app.on_event("startup")
 def on_startup() -> None:
+    if settings.auth_required and settings.jwt_secret == "change-me-in-production":
+        raise RuntimeError(
+            "JWT_SECRET must be set to a secure value when AUTH_REQUIRED=true"
+        )
     init_db()
     db = SessionLocal()
     try:
@@ -441,6 +450,7 @@ def list_leads(
     has_email: Optional[bool] = Query(None),
     has_phone: Optional[bool] = Query(None),
     has_contact: Optional[bool] = Query(None),
+    has_portal: Optional[bool] = Query(None),
     not_exported: Optional[bool] = Query(None),
     assigned_to_me: Optional[bool] = Query(None),
     assigned_to_user_id: Optional[int] = Query(None),
@@ -471,6 +481,8 @@ def list_leads(
             (Lead.email.isnot(None) & (Lead.email != ""))
             | (Lead.phone.isnot(None) & (Lead.phone != ""))
         )
+    if has_portal:
+        q = q.filter(Lead.portal_detected.is_(True))
     if not_exported:
         q = q.filter(Lead.exported_at.is_(None))
     if hot_only:

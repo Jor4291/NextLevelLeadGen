@@ -1,4 +1,5 @@
 import { NavLink, Route, Routes } from "react-router-dom";
+import { getEntityId } from "./api";
 import { useAuth } from "./auth";
 import Dashboard from "./pages/Dashboard";
 import ScrapeJobs from "./pages/ScrapeJobs";
@@ -67,8 +68,7 @@ export default function App() {
   }
 
   if (authRequired) {
-    const entityId = import.meta.env.VITE_ENTITY_ID || "caelvon";
-    const token = localStorage.getItem(`${entityId}_token`);
+    const token = localStorage.getItem(`${getEntityId()}_token`);
     if (!token || !user?.id) {
       return <Login />;
     }

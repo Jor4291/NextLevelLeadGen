@@ -77,6 +77,18 @@ def _migrate_schema() -> None:
             with engine.begin() as conn:
                 conn.execute(text("ALTER TABLE leads ADD COLUMN assigned_to_user_id INTEGER"))
 
+        lead_migrations = [
+            ("address", "VARCHAR(512)"),
+            ("portal_detected", "BOOLEAN NOT NULL DEFAULT 0"),
+            ("portal_type", "VARCHAR(32)"),
+            ("portal_urls", "JSON"),
+            ("platform_signals", "JSON"),
+        ]
+        for col_name, col_def in lead_migrations:
+            if col_name not in lead_columns:
+                with engine.begin() as conn:
+                    conn.execute(text(f"ALTER TABLE leads ADD COLUMN {col_name} {col_def}"))
+
 
 def get_db():
     db = SessionLocal()

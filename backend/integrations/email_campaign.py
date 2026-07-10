@@ -22,19 +22,19 @@ DEFAULT_SUBJECT = "Scope before code — quick assessment for {company_name}"
 
 DEFAULT_BODY_FALLBACK = """Hi {contact_name},
 
-I'm reaching out from Caelvon Solutions. We partner with industrial and supply-chain operators to fix operational bottlenecks — consulting first, custom software only when it's warranted.
+I'm reaching out from Next Level Studio. We help growing businesses streamline operations with custom software, web apps, and workflow automation — practical builds, not hype.
 
-From what we can see publicly, {company_name} may be dealing with some of the same patterns we help with: manual workflows, spreadsheet-driven ops, or legacy system integration gaps.
+From what we can see publicly, {company_name} may be dealing with spreadsheet-driven processes, manual handoffs, or systems that don't talk to each other.
 
-If that's accurate, we'd welcome a 30-minute assessment to understand your operation and whether we can help — no pitch deck, no hype.
+If that's accurate, we'd welcome a short call to see if there's a fit — no pitch deck, just an honest look at where software could save your team time.
 
-You can book directly here: https://caelvon.com/#assessment
+Learn more: https://nextlevelstudio.com/custom-software/
 
 Best,
 {from_name}
-Caelvon Solutions, LLC
-engage@caelvon.com
-https://caelvon.com
+Next Level Studio, LLC
+info@nextlevelstudio.com
+https://nextlevelstudio.com
 
 ---
 To unsubscribe from future emails, reply with "unsubscribe".

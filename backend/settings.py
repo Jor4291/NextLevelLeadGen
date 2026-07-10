@@ -1,8 +1,20 @@
 from pathlib import Path
 
+import yaml
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 ROOT_DIR = Path(__file__).resolve().parent.parent
+
+
+def _load_brand_defaults() -> dict:
+    path = ROOT_DIR / "config" / "brand.yaml"
+    if path.exists():
+        with path.open(encoding="utf-8") as f:
+            return yaml.safe_load(f) or {}
+    return {}
+
+
+_brand = _load_brand_defaults()
 
 
 class Settings(BaseSettings):
@@ -14,18 +26,20 @@ class Settings(BaseSettings):
 
     database_url: str = f"sqlite:///{(ROOT_DIR / 'data' / 'leads.db').as_posix()}"
     scrape_rate_limit_seconds: float = 2.0
-    scrape_user_agent: str = "CaelvonLeadBot/1.0 (+https://caelvon.com)"
-    use_playwright_for_maps: bool = False
-    skip_website_resolution: bool = True
-    skip_job_signals: bool = True
+    scrape_user_agent: str = _brand.get(
+        "scrape_user_agent",
+        "NextLevelLeadBot/1.0 (+https://nextlevelstudio.com)",
+    )
+    skip_website_resolution: bool = False
+    skip_job_signals: bool = False
     max_companies_per_job: int = 25
     google_sheets_credentials_path: str = str(
         ROOT_DIR / "credentials" / "google-service-account.json"
     )
     google_sheet_id: str = ""
     resend_api_key: str = ""
-    email_from: str = "engage@caelvon.com"
-    email_from_name: str = "Caelvon Solutions"
+    email_from: str = _brand.get("contact_email", "info@nextlevelstudio.com")
+    email_from_name: str = _brand.get("email_from_name", "Next Level Studio")
     icp_config_path: str = str(ROOT_DIR / "config" / "icp.yaml")
     brand_config_path: str = str(ROOT_DIR / "config" / "brand.yaml")
 

@@ -3,7 +3,7 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, field
 
-from backend.config_loader import load_brand_config
+from backend.config_loader import load_brand_config, load_icp_config
 from backend.scrapers.website_enricher import EnrichmentResult
 
 ERP_PAIN_WORDS = (
@@ -267,6 +267,30 @@ class ICPScorer:
             points += w
             rationale_parts.append(f"Named-person email pattern: +{w}")
 
+        if enrichment.portal_detected:
+            w = self.weights.get("portal_detection", 15)
+            points += w
+            software_hits += 1
+            portal_label = enrichment.portal_type or "unknown"
+            pain_signals.append(
+                f"Portal detected ({portal_label}): custom platform rebuild/audit opportunity"
+            )
+            if enrichment.portal_urls:
+                pain_signals.append(
+                    f"Portal URLs: {', '.join(enrichment.portal_urls[:3])}"
+                )
+            rationale_parts.append(
+                f"Portal/login detected ({portal_label}): +{w}"
+            )
+
+        if enrichment.platform_signals:
+            w = min(10, len(enrichment.platform_signals) * 3)
+            points += w
+            software_hits += 1
+            rationale_parts.append(
+                f"Custom platform signals ({len(enrichment.platform_signals)}): +{w}"
+            )
+
         if positive_matched:
             w = min(
                 self.weights.get("positive_keyword", 12),
@@ -307,6 +331,7 @@ class ICPScorer:
             or software_hits > 0
             or hiring_hits > 0
             or len(positive_matched) > 0
+            or enrichment.portal_detected
         )
         evidence_floor = self.thresholds.get("evidence_floor", 40)
         if not has_evidence and points > evidence_floor:
@@ -320,6 +345,8 @@ class ICPScorer:
 
         if process_hits and software_hits:
             practice_fit = "Both"
+        elif enrichment.portal_detected:
+            practice_fit = "Custom Software"
         elif process_hits:
             practice_fit = "Process Opt"
         elif software_hits:

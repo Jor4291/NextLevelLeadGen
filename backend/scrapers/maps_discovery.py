@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 import re
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -12,6 +13,7 @@ from bs4 import BeautifulSoup
 from backend.config_loader import load_icp_config
 from backend.settings import settings
 
+logger = logging.getLogger(__name__)
 
 @dataclass
 class DiscoveredCompany:
@@ -47,8 +49,8 @@ def _extract_domain(url: str) -> str | None:
         domain = domain.lower().removeprefix("www.")
         if domain and "." in domain:
             return domain
-    except Exception:
-        pass
+    except Exception as exc:
+        logger.debug("Domain extraction failed for %s: %s", url, exc)
     return None
 
 
@@ -252,8 +254,8 @@ class MapsDiscoveryScraper:
                 address_text = await address_loc.inner_text()
                 if address_text:
                     company.address = address_text.strip()
-        except Exception:
-            pass
+        except Exception as exc:
+            logger.warning("Failed to enrich Maps place detail %s: %s", place_url, exc)
 
     async def _search_google_maps(
         self, page, query: str, industry: str, max_results: int
@@ -297,7 +299,8 @@ class MapsDiscoveryScraper:
                 if href:
                     await self._enrich_from_place_detail(page, href, company)
                     await asyncio.sleep(self.rate_limit * 0.2)
-        except Exception:
+        except Exception as exc:
+            logger.warning("Google Maps search failed for %s: %s", query, exc)
             return companies
 
         return companies
@@ -325,7 +328,8 @@ class MapsDiscoveryScraper:
                         industry=industry,
                     )
                 )
-        except Exception:
+        except Exception as exc:
+            logger.warning("Bing search failed for %s: %s", query, exc)
             return companies
 
         return companies
@@ -352,7 +356,8 @@ class MapsDiscoveryScraper:
                     continue
                 if first_name in title or first_name in domain or idx == 0:
                     return href
-        except Exception:
+        except Exception as exc:
+            logger.warning("Bing website resolution failed for %s: %s", company_name, exc)
             return None
         return None
 

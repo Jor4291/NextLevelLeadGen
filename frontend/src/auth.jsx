@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import { apiGet, getAuthExpiredEvent, getStoredUser, logout as clearSession, storeSession } from "./api";
+import { apiGet, getAuthExpiredEvent, getEntityId, getStoredUser, logout as clearSession, storeSession } from "./api";
 
 const AuthContext = createContext(null);
 
@@ -25,9 +25,7 @@ export function AuthProvider({ children }) {
         return;
       }
 
-      const token = localStorage.getItem(
-        `${import.meta.env.VITE_ENTITY_ID || "caelvon"}_token`
-      );
+      const token = localStorage.getItem(`${getEntityId()}_token`);
       if (!token) {
         setUser(null);
         return;

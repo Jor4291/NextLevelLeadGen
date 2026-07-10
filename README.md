@@ -8,6 +8,7 @@ Local lead discovery and qualification dashboard for [Next Level Studio](https:/
 
 - **Discovery scraper** — DuckDuckGo public search by industry + location (optional Playwright Google Maps)
 - **Website enrichment** — emails, phones, decision-makers, employee estimates, pain keywords
+- **Portal detection** — customer/employee/vendor login pages, portal URLs, custom platform signals
 - **Job signal mining** — careers pages and Indeed snippets for hiring/pain indicators
 - **ICP scoring (0–100)** — weighted toward Process Optimization and Custom Software practices
 - **Lead inbox** — review, notes, status workflow, filters
@@ -119,7 +120,7 @@ Edit [`config/icp.yaml`](config/icp.yaml) to tune:
 
 ## Email (Phase 2)
 
-**Built-in (Resend):** Set `RESEND_API_KEY` in `.env`. Configure SPF/DKIM for `engage@caelvon.com`.
+**Built-in (Resend):** Set `RESEND_API_KEY` in `.env`. Configure SPF/DKIM for `info@nextlevelstudio.com`.
 
 **Instantly.ai (recommended for volume):** Export CSV from Email Campaigns page, upload with warmup enabled.
 
@@ -133,13 +134,7 @@ Edit [`config/icp.yaml`](config/icp.yaml) to tune:
 
 ## Optional: Playwright Google Maps
 
-Set in `.env`:
-
-```
-USE_PLAYWRIGHT_FOR_MAPS=true
-```
-
-Then install browsers:
+Playwright Chromium is required for company discovery. Install browsers:
 
 ```powershell
 playwright install chromium

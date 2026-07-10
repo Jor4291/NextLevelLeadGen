@@ -69,7 +69,7 @@ class ScrapeJob(Base):
     keyword_override: Mapped[str | None] = mapped_column(String(256))
     positive_keywords_override: Mapped[str | None] = mapped_column(Text)
     negative_keywords_override: Mapped[str | None] = mapped_column(Text)
-    enrichment_mode: Mapped[str] = mapped_column(String(16), default="fast")
+    enrichment_mode: Mapped[str] = mapped_column(String(16), default="quality")
     status: Mapped[ScrapeJobStatus] = mapped_column(
         Enum(ScrapeJobStatus), default=ScrapeJobStatus.PENDING
     )
@@ -107,6 +107,11 @@ class Lead(Base):
     contact_title: Mapped[str | None] = mapped_column(String(256))
     city: Mapped[str | None] = mapped_column(String(128))
     state: Mapped[str | None] = mapped_column(String(8))
+    address: Mapped[str | None] = mapped_column(String(512))
+    portal_detected: Mapped[bool] = mapped_column(Boolean, default=False, index=True)
+    portal_type: Mapped[str | None] = mapped_column(String(32))
+    portal_urls: Mapped[list | None] = mapped_column(JSON, default=list)
+    platform_signals: Mapped[list | None] = mapped_column(JSON, default=list)
     employee_estimate: Mapped[int | None] = mapped_column(Integer)
     fit_score: Mapped[float] = mapped_column(Float, default=0.0, index=True)
     lead_tier: Mapped[str | None] = mapped_column(String(1), index=True)

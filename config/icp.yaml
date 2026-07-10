@@ -16,6 +16,7 @@ scoring_weights:
   contact_quality: 5
   decision_maker: 5
   named_email: 2
+  portal_detection: 15
   positive_keyword: 12
   negative_keyword: 8
 
@@ -248,6 +249,35 @@ positive_keywords:
   - release engineering
   - CI/CD pipeline
   - observability gap
+
+portal_keywords:
+  - customer portal
+  - client portal
+  - employee portal
+  - employee login
+  - dealer login
+  - dealer portal
+  - partner portal
+  - vendor portal
+  - sign in
+  - log in
+  - member login
+  - my account
+  - intranet
+  - client area
+  - distributor login
+
+platform_signal_keywords:
+  - our platform
+  - proprietary system
+  - custom-built
+  - custom built
+  - built in-house
+  - in-house platform
+  - legacy system
+  - legacy platform
+  - bespoke software
+  - custom application
 
 # Soft-fit penalties — lowers score but does not auto-disqualify
 negative_keywords:

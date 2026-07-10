@@ -26,6 +26,7 @@ const EMPTY_FILTERS = {
   has_email: false,
   has_phone: false,
   has_contact: false,
+  has_portal: false,
   not_exported: false,
   hot_only: false,
   assigned_to_me: false,
@@ -57,6 +58,7 @@ export default function LeadInbox() {
     if (filters.has_email) params.set("has_email", "true");
     if (filters.has_phone) params.set("has_phone", "true");
     if (filters.has_contact) params.set("has_contact", "true");
+    if (filters.has_portal) params.set("has_portal", "true");
     if (filters.not_exported) params.set("not_exported", "true");
     if (filters.hot_only) params.set("hot_only", "true");
     if (filters.assigned_to_me) params.set("assigned_to_me", "true");
@@ -115,6 +117,15 @@ export default function LeadInbox() {
       setFilters({
         ...EMPTY_FILTERS,
         min_score: String(thresholds?.qualified ?? 50),
+      });
+      return;
+    }
+    if (preset === "portal") {
+      setShowAll(false);
+      setFilters({
+        ...EMPTY_FILTERS,
+        has_portal: true,
+        min_score: String(thresholds?.review ?? 35),
       });
       return;
     }
@@ -186,6 +197,9 @@ export default function LeadInbox() {
         </button>
         <button type="button" className="btn btn-sm" onClick={() => applyPreset("qualified")}>
           Qualified ({thresholds?.qualified ?? 50}+)
+        </button>
+        <button type="button" className="btn btn-sm" onClick={() => applyPreset("portal")}>
+          Has portal
         </button>
         <button
           type="button"
@@ -313,6 +327,16 @@ export default function LeadInbox() {
         <label className="checkbox-row">
           <input
             type="checkbox"
+            checked={filters.has_portal}
+            onChange={(e) =>
+              setFilters({ ...filters, has_portal: e.target.checked })
+            }
+          />
+          Has portal
+        </label>
+        <label className="checkbox-row">
+          <input
+            type="checkbox"
             checked={filters.not_exported}
             onChange={(e) =>
               setFilters({ ...filters, not_exported: e.target.checked })
@@ -369,6 +393,9 @@ export default function LeadInbox() {
                     <Link to={`/leads/${l.id}`}>{l.company_name}</Link>
                     <div style={{ fontSize: "0.8rem", color: "var(--muted)" }}>
                       {[l.city, l.state].filter(Boolean).join(", ")} · {l.industry}
+                      {l.portal_detected && (
+                        <span className="portal-badge"> Portal</span>
+                      )}
                     </div>
                   </td>
                   <td>

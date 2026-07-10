@@ -1,6 +1,6 @@
 # Phase 1 Deployment Guide
 
-Deploy the Caelvon Lead Generator for your team: one central API + database, dashboard accessible from any location.
+Deploy the Next Level Studio Lead Generator for your team: one central API + database, dashboard accessible from any location.
 
 ## Architecture
 
@@ -47,17 +47,17 @@ Deploy the Caelvon Lead Generator for your team: one central API + database, das
    | `ADMIN_PASSWORD` | strong password |
    | `ALLOW_REGISTRATION` | `false` (or `true` to let BDRs self-register) |
    | `CORS_ORIGINS` | your Vercel URL |
-   | `USE_PLAYWRIGHT_FOR_MAPS` | `true` |
 
 5. Mount or upload Google Sheets credentials if using export.
-6. Note your public API URL, e.g. `https://caelvon-leads-api.up.railway.app`.
+6. Note your public API URL, e.g. `https://nextlevel-leads-api.up.railway.app`.
 
 ### 2. Deploy frontend (Vercel)
 
 1. Import the repo in Vercel.
 2. Set **Root Directory** to `frontend`.
-3. Add environment variable:
+3. Add environment variables:
    - `VITE_API_URL` = `https://your-api-url` (no trailing slash)
+   - `VITE_ENTITY_ID` = `nextlevel`
 4. Deploy.
 
 ### 3. First login
@@ -81,7 +81,7 @@ To test auth locally:
 
 ```env
 AUTH_REQUIRED=true
-ADMIN_EMAIL=you@caelvon.com
+ADMIN_EMAIL=admin@nextlevelstudio.com
 ADMIN_PASSWORD=yourpassword
 JWT_SECRET=local-dev-secret
 ```

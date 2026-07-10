@@ -17,6 +17,10 @@ EXPORT_COLUMNS = [
     "Email",
     "Phone",
     "Website",
+    "Address",
+    "Portal Detected",
+    "Portal Type",
+    "Portal URLs",
     "Notes",
     "Status",
     "Source URL",
@@ -56,7 +60,7 @@ def export_leads_to_sheet(leads: list, sheet_id: str | None = None) -> dict:
     try:
         worksheet = spreadsheet.worksheet("Leads")
     except Exception:
-        worksheet = spreadsheet.add_worksheet(title="Leads", rows=1000, cols=20)
+        worksheet = spreadsheet.add_worksheet(title="Leads", rows=1000, cols=24)
 
     existing = worksheet.get_all_values()
     if not existing:
@@ -65,6 +69,7 @@ def export_leads_to_sheet(leads: list, sheet_id: str | None = None) -> dict:
     rows = []
     for lead in leads:
         pain = "; ".join((lead.pain_signals or [])[:3])
+        portal_urls = ", ".join((lead.portal_urls or [])[:5])
         rows.append(
             [
                 lead.company_name,
@@ -77,6 +82,10 @@ def export_leads_to_sheet(leads: list, sheet_id: str | None = None) -> dict:
                 lead.email or "",
                 lead.phone or "",
                 lead.website or "",
+                lead.address or "",
+                "Yes" if lead.portal_detected else "No",
+                lead.portal_type or "",
+                portal_urls,
                 lead.notes or "",
                 lead.status.value if hasattr(lead.status, "value") else str(lead.status),
                 lead.source_url or "",

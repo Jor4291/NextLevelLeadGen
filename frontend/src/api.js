@@ -1,4 +1,4 @@
-const ENTITY_ID = import.meta.env.VITE_ENTITY_ID || "caelvon";
+const ENTITY_ID = import.meta.env.VITE_ENTITY_ID || "nextlevel";
 const API_BASE = import.meta.env.VITE_API_URL || "";
 
 function tokenKey() {

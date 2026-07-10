@@ -13,7 +13,7 @@ export default function ScrapeJobs() {
     keyword_override: "",
     positive_keywords_override: "",
     negative_keywords_override: "",
-    enrichment_mode: "fast",
+    enrichment_mode: "quality",
   });
   const [loading, setLoading] = useState(false);
   const [cancellingId, setCancellingId] = useState(null);

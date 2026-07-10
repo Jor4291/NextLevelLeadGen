@@ -85,7 +85,35 @@ export default function LeadDetail() {
             )}
             <br />
             <strong>Employees (est.):</strong> {lead.employee_estimate || "—"}
+            <br />
+            <strong>Address:</strong> {lead.address || "—"}
           </p>
+
+          {lead.portal_detected && (
+            <>
+              <h3>Portal / Custom Platform</h3>
+              <p>
+                <strong>Detected:</strong> Yes
+                <br />
+                <strong>Type:</strong> {lead.portal_type || "unknown"}
+                <br />
+                <strong>URLs:</strong>{" "}
+                {lead.portal_urls?.length ? (
+                  <ul style={{ margin: "0.25rem 0", paddingLeft: "1.25rem" }}>
+                    {lead.portal_urls.map((url) => (
+                      <li key={url}>
+                        <a href={url} target="_blank" rel="noreferrer">
+                          {url}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  "—"
+                )}
+              </p>
+            </>
+          )}
 
           <h3>Call Notes</h3>
           <textarea
